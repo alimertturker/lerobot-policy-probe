@@ -47,6 +47,60 @@ pip install -e .                    # lerobot>=0.6.2 must already be importable
 pip install -e ".[dataset,plot]"    # score, replay and plot need these
 ```
 
+## Running in Google Colab
+
+Useful when you have no local GPU. `inspect` and `repair` run on the free CPU runtime;
+`score` and `replay` load the whole policy and want a GPU (**Runtime → Change runtime type
+→ T4 GPU** or better; pi05 needs an A100 or L4).
+
+```python
+# 1. install (lerobot comes in as a dependency)
+!pip install -q "lerobot-policy-probe[dataset,plot] @ git+https://github.com/alimertturker/lerobot-policy-probe.git"
+```
+
+```python
+# 2. private checkpoints or datasets: add HF_TOKEN under the key icon (Secrets) in the
+#    left sidebar and allow notebook access. huggingface_hub picks it up automatically.
+#    Or log in interactively:
+from huggingface_hub import login
+login()
+```
+
+```python
+# 3. run the ladder
+!lerobot-probe inspect lerobot/smolvla_base
+
+!lerobot-probe score --policy-type smolvla \
+  --checkpoint alimerido/smolvla-wrist-top-cube-v3 \
+  --dataset alimerido/wrist-top-cube_20260705_134536 --device cuda
+
+!lerobot-probe replay --policy-type smolvla \
+  --checkpoint alimerido/smolvla-wrist-top-cube-v3 \
+  --dataset alimerido/wrist-top-cube_20260705_134536 --episodes 3 --out outputs/replay
+!lerobot-probe plot --traces outputs/replay
+```
+
+```python
+# 4. show the plots inline
+from pathlib import Path
+from IPython.display import Image, display
+for png in sorted(Path("outputs/replay").glob("*.png")):
+    display(Image(str(png)))
+```
+
+Colab notes:
+
+- Python must be 3.12 or newer, which current Colab runtimes are. Check with `!python --version`.
+- If pip reports a conflict with Colab's preinstalled torch, restart the session
+  (**Runtime → Restart session**) after installing and run from step 2.
+- `inspect` reads remote checkpoints over plain HTTP and does not send your token, so it only
+  works on public hub repos. For a private one, download it first and pass the directory:
+  `!hf download <repo> --local-dir ckpt && lerobot-probe inspect ckpt`.
+- The Colab disk is wiped when the runtime stops. Copy anything you want to keep to Drive
+  (`from google.colab import drive; drive.mount("/content/drive")`) or download it from the
+  file browser.
+- `--device cpu` works for `score` on small policies such as ACT, but is slow.
+
 ## 1. inspect — are the weights real?
 
 ```bash
