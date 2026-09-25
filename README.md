@@ -43,6 +43,7 @@ tuning will help.
 ## Install
 
 ```bash
+pip install "lerobot @ git+https://github.com/huggingface/lerobot.git"   # 0.6.2 is not on PyPI yet
 pip install -e .                    # lerobot>=0.6.2 must already be importable
 pip install -e ".[dataset,plot]"    # score, replay and plot need these
 ```
@@ -54,8 +55,9 @@ Useful when you have no local GPU. `inspect` and `repair` run on the free CPU ru
 → T4 GPU** or better; pi05 needs an A100 or L4).
 
 ```python
-# 1. install (lerobot comes in as a dependency)
-!pip install -q "lerobot-policy-probe[dataset,plot] @ git+https://github.com/alimertturker/lerobot-policy-probe.git"
+# 1. install. lerobot>=0.6.2 is not on PyPI yet, so it comes from GitHub, first.
+!pip install -q "lerobot[dataset,smolvla,pi] @ git+https://github.com/huggingface/lerobot.git"
+!pip install -q "lerobot-policy-probe[plot] @ git+https://github.com/alimertturker/lerobot-policy-probe.git"
 ```
 
 ```python
@@ -87,6 +89,9 @@ from IPython.display import Image, display
 for png in sorted(Path("outputs/replay").glob("*.png")):
     display(Image(str(png)))
 ```
+
+For a complete worked example that clones, installs, and replays smolvla and pi05 on the same
+dataset, see [`examples/replay_colab.ipynb`](examples/replay_colab.ipynb).
 
 Colab notes:
 
