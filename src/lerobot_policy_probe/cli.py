@@ -73,7 +73,7 @@ def cmd_replay(args) -> None:
     summary = replay(
         policy, pre, post, ds, Path(args.out),
         label=args.label or args.policy_type,
-        episodes=args.episodes, replan=args.replan, max_steps=args.max_steps, seed=args.seed,
+        episodes=args.episodes, episode_ids=args.episode_ids, replan=args.replan, max_steps=args.max_steps, seed=args.seed,
     )
     overall = sum(s["mae"] for s in summary) / max(len(summary), 1)
     print(f"\noverall MAE {overall:.3f}   traces in {args.out}")
@@ -135,7 +135,9 @@ def main() -> None:
             p.add_argument("--trials", type=int, default=24)
             p.add_argument("--horizon", type=int, default=50)
         else:
-            p.add_argument("--episodes", type=int, default=5)
+            p.add_argument("--episodes", type=int, default=5, help="how many random episodes")
+            p.add_argument("--episode-ids", type=int, nargs="+", default=None, metavar="ID",
+                           help="replay exactly these episodes, e.g. 0 1 2 3 4 (overrides --episodes)")
             p.add_argument("--replan", type=int, default=50)
             p.add_argument("--max-steps", type=int, default=600)
             p.add_argument("--out", default="outputs/replay")

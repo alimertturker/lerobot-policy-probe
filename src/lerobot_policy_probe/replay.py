@@ -1,6 +1,6 @@
 """Replay whole episodes and record what the policy would have commanded.
 
-`score` gives numbers. This gives the picture: for randomly chosen episodes, what the human
+`score` gives numbers. This gives the picture: for chosen episodes, what the human
 commanded each joint to do, against what the policy would have commanded from the same
 observations.
 
@@ -28,9 +28,14 @@ def episode_bounds(ds, ep: int) -> tuple[int, int]:
 
 def replay(
     policy, pre, post, ds, out: Path, *, label: str,
-    episodes: int = 5, replan: int = 50, max_steps: int = 600, seed: int = 0,
+    episodes: int = 5, episode_ids: list[int] | None = None,
+    replan: int = 50, max_steps: int = 600, seed: int = 0,
 ) -> list[dict]:
-    """Write one .npz of (real, model) joint traces per episode. Returns a summary."""
+    """Write one .npz of (real, model) joint traces per episode. Returns a summary.
+
+    `episode_ids` replays exactly those episodes; otherwise `episodes` are drawn at random
+    from `seed`.
+    """
     import torch
 
     out.mkdir(parents=True, exist_ok=True)
@@ -39,8 +44,14 @@ def replay(
         f"joint_{i}" for i in range(ds.features["action"]["shape"][0])
     ]
 
-    rng = np.random.default_rng(seed)
-    eps = sorted(rng.choice(ds.num_episodes, size=min(episodes, ds.num_episodes), replace=False).tolist())
+    if episode_ids:
+        bad = [e for e in episode_ids if not 0 <= e < ds.num_episodes]
+        if bad:
+            raise SystemExit(f"episode ids {bad} out of range: dataset has {ds.num_episodes} (0-{ds.num_episodes - 1})")
+        eps = sorted(set(episode_ids))
+    else:
+        rng = np.random.default_rng(seed)
+        eps = sorted(rng.choice(ds.num_episodes, size=min(episodes, ds.num_episodes), replace=False).tolist())
 
     summary = []
     for ep in eps:

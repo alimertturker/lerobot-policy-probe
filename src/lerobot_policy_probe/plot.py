@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 _COLORS = {"smolvla": "tab:orange", "pi05": "tab:green", "act": "tab:blue"}
+_SPARE = ["tab:purple", "tab:red", "tab:brown", "tab:pink", "tab:olive", "tab:cyan"]
 
 
 def plot(traces: Path, out: Path, fps: float = 30.0) -> list[Path]:
@@ -41,6 +42,11 @@ def plot(traces: Path, out: Path, fps: float = 30.0) -> list[Path]:
         label, ep = p.stem.rsplit("_ep", 1)
         by_ep.setdefault(ep, {})[label] = p
 
+    # labels outside _COLORS (e.g. "pi05-10k") get a fixed spare, so they match across figures
+    labels = sorted({lb for entries in by_ep.values() for lb in entries})
+    extra = iter(_SPARE)
+    colors = {lb: _COLORS.get(lb) or next(extra, None) for lb in labels}
+
     written = []
     for ep, entries in sorted(by_ep.items()):
         first = np.load(next(iter(entries.values())), allow_pickle=True)
@@ -57,7 +63,7 @@ def plot(traces: Path, out: Path, fps: float = 30.0) -> list[Path]:
             for label, path in sorted(entries.items()):
                 m = np.load(path, allow_pickle=True)["model"]
                 ax.plot(t[: len(m)], m[:, j], lw=1.3, ls="--",
-                        color=_COLORS.get(label), label=f"{label} (model command)")
+                        color=colors[label], label=f"{label} (model command)")
             for b in range(replan, n, replan):
                 ax.axvline(b / fps, color="grey", alpha=0.25, lw=0.7)
             ax.set_ylabel(str(joints[j]).replace(".pos", ""), fontsize=9)

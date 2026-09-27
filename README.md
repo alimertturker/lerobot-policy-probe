@@ -163,6 +163,9 @@ lerobot-probe replay --policy-type smolvla --checkpoint <ckpt> \
 lerobot-probe plot --traces outputs/replay
 ```
 
+`--episodes N` picks N episodes at random from `--seed`; `--episode-ids 0 1 2 3 4` replays
+exactly those. Use the same ids for every policy you want on one figure.
+
 One figure per episode, one panel per joint. Solid black is the human, dashed is the
 policy. Point several policies at the same output directory and they land on one figure.
 
